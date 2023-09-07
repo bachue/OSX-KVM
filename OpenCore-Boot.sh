@@ -30,11 +30,23 @@ OVMF_DIR="."
 args=(
   -enable-kvm -m "$ALLOCATED_RAM" -cpu Penryn,kvm=on,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,"$MY_OPTIONS"
   -machine q35
-  -usb -device usb-kbd -device usb-tablet
+# -usb -device usb-kbd -device usb-tablet
   -smp "$CPU_THREADS",cores="$CPU_CORES",sockets="$CPU_SOCKETS"
-  -device usb-ehci,id=ehci
-  # -device usb-kbd,bus=ehci.0
-  # -device usb-mouse,bus=ehci.0
+# -device usb-ehci,id=ehci
+# -device usb-kbd,bus=ehci.0
+# -device usb-mouse,bus=ehci.0
+ -rtc base=localtime,driftfix=slew 
+ -global ICH9-LPC.disable_s3=1 
+ -global ICH9-LPC.disable_s4=1 
+ -device pcie-root-port,port=0x10,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x2 
+ -device pcie-root-port,port=0x11,chassis=2,id=pci.2,bus=pcie.0,addr=0x2.0x1 
+ -device pcie-root-port,port=0x12,chassis=3,id=pci.3,bus=pcie.0,addr=0x2.0x2 
+ -device pcie-root-port,port=0x13,chassis=4,id=pci.4,bus=pcie.0,addr=0x2.0x3 
+ -device ich9-usb-ehci1,id=usb,bus=pcie.0,addr=0x1d.0x7 
+ -device ich9-usb-uhci1,masterbus=usb.0,firstport=0,bus=pcie.0,multifunction=on,addr=0x1d 
+ -device ich9-usb-uhci2,masterbus=usb.0,firstport=2,bus=pcie.0,addr=0x1d.0x1 
+ -device ich9-usb-uhci3,masterbus=usb.0,firstport=4,bus=pcie.0,addr=0x1d.0x2
+ -device usb-tablet,id=input0,bus=usb.0,port=1
   -device nec-usb-xhci,id=xhci
   -global nec-usb-xhci.msi=off
   # -device usb-host,vendorid=0x8086,productid=0x0808  # 2 USD USB Sound Card
@@ -43,17 +55,17 @@ args=(
   -drive if=pflash,format=raw,readonly=on,file="$REPO_PATH/$OVMF_DIR/OVMF_CODE.fd"
   -drive if=pflash,format=raw,file="$REPO_PATH/$OVMF_DIR/OVMF_VARS-1024x768.fd"
   -smbios type=2
-  -device ich9-intel-hda -device hda-duplex
+  # -device ich9-intel-hda -device hda-duplex
   -device ich9-ahci,id=sata
   -drive id=OpenCoreBoot,if=none,snapshot=on,format=qcow2,file="$REPO_PATH/OpenCore/OpenCore.qcow2"
   -device ide-hd,bus=sata.2,drive=OpenCoreBoot
   -device ide-hd,bus=sata.3,drive=InstallMedia
-  -drive id=InstallMedia,if=none,file="$REPO_PATH/BaseSystem.img",format=raw
-  -drive id=MacHDD,if=none,file="$REPO_PATH/mac_hdd_ng.img",format=qcow2
+  -drive id=InstallMedia,if=none,file="/var/lib/libvirt/images/MacOSBaseSystem.img",format=raw
+  -drive id=MacHDD,if=none,file="/var/lib/libvirt/images/MacOS.qcow2",format=qcow2
   -device ide-hd,bus=sata.4,drive=MacHDD
   # -netdev tap,id=net0,ifname=tap0,script=no,downscript=no -device virtio-net-pci,netdev=net0,id=net0,mac=52:54:00:c9:18:27
   -netdev user,id=net0 -device virtio-net-pci,netdev=net0,id=net0,mac=52:54:00:c9:18:27
-  # -netdev user,id=net0 -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:c9:18:27  # Note: Use this line for High Sierra
+  -vnc :2,password
   -monitor stdio
   -device VGA,vgamem_mb=128
 )
